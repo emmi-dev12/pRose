@@ -45,6 +45,13 @@ export interface Spread {
   rightText?: string;
 }
 
+// A deleted block rests here until the writer restores or clears it.
+export interface LoosePage {
+  id: string;
+  text: string;
+  discardedAt: string; // ISO
+}
+
 export interface Volume {
   id: string;
   title: string;
@@ -52,6 +59,7 @@ export interface Volume {
   look: VolumeLook;
   spreads: Spread[]; // chronological, oldest → newest
   createdAt: string; // ISO — for ordering the shelf
+  loosePages?: LoosePage[]; // recovery drawer for deleted blocks
 }
 
 // The whole shelf: every volume the writer owns, encrypted together under one passphrase.

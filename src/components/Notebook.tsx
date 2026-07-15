@@ -1,5 +1,6 @@
 import { type MouseEvent, type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Spread, Volume } from '../types';
+import { toPng } from 'html-to-image';
+import type { LoosePage, Spread, Volume } from '../types';
 import { newBlock, newSpread, nextDay } from '../types';
 import { computeWear, effectiveAmount } from '../wear';
 import { WearLayer } from './WearLayer';
@@ -97,6 +98,58 @@ export function Notebook({
     () => setSpread({ ...cur, bookmarked: !cur.bookmarked }),
     [cur, setSpread],
   );
+
+  const moveBlock = useCallback(
+    (id: string, x: number, y: number) =>
+      setSpread({ ...cur, blocks: cur.blocks.map((b) => (b.id === id ? { ...b, x, y } : b)) }),
+    [cur, setSpread],
+  );
+
+  // deliberate delete → the block rests in the volume's loose-pages drawer
+  const deleteBlock = useCallback(
+    (id: string) => {
+      const blk = cur.blocks.find((b) => b.id === id);
+      const blocks = cur.blocks.filter((b) => b.id !== id);
+      const loose =
+        blk && blk.text.trim()
+          ? [{ id: crypto.randomUUID(), text: blk.text, discardedAt: new Date().toISOString() }, ...(volume.loosePages ?? [])]
+          : volume.loosePages ?? [];
+      onChange({ ...volume, loosePages: loose, spreads: spreads.map((s, k) => (k === i ? { ...s, blocks } : s)) });
+    },
+    [cur, volume, spreads, i, onChange],
+  );
+
+  const currentSide: 'left' | 'right' = mobile ? mSide : 'left';
+  const restoreLoose = useCallback(
+    (lp: LoosePage) => {
+      const nb = { ...newBlock(currentSide, 8, 10), text: lp.text };
+      onChange({
+        ...volume,
+        loosePages: (volume.loosePages ?? []).filter((x) => x.id !== lp.id),
+        spreads: spreads.map((s, k) => (k === i ? { ...s, blocks: [...s.blocks, nb] } : s)),
+      });
+    },
+    [currentSide, volume, spreads, i, onChange],
+  );
+  const discardLoose = useCallback(
+    (id: string) => onChange({ ...volume, loosePages: (volume.loosePages ?? []).filter((x) => x.id !== id) }),
+    [volume, onChange],
+  );
+  const clearLoose = useCallback(() => onChange({ ...volume, loosePages: [] }), [volume, onChange]);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const bookRef = useRef<HTMLDivElement>(null);
+
+  const exportImage = useCallback(async () => {
+    if (!bookRef.current) return;
+    const url = await toPng(bookRef.current, { pixelRatio: 2, cacheBust: true });
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${volume.slug}-${cur.date}.png`;
+    a.click();
+  }, [volume.slug, cur.date]);
+
+  const exportPdf = useCallback(() => window.print(), []);
 
   // ---- desktop: whole-spread flip ----
   const commit = useCallback((dir: 'next' | 'prev') => {
@@ -203,8 +256,12 @@ export function Notebook({
           autoFocus={b.id === focusId}
           onChange={(t) => editBlock(b.id, t)}
           onCommitEmpty={() => removeBlock(b.id)}
+          onMove={(x, y) => moveBlock(b.id, x, y)}
+          onDelete={() => deleteBlock(b.id)}
         />
       ));
+
+  const looseCount = volume.loosePages?.length ?? 0;
 
   const hint = (spread: Spread, side: 'left' | 'right', show: boolean) =>
     show && spread.blocks.filter((b) => b.page === side).length === 0 ? (
@@ -226,7 +283,70 @@ export function Notebook({
       >
         🌹 {cur.bookmarked ? 'bookmarked' : 'bookmark'}
       </button>
+      <button className="ctl-btn" onClick={() => setDrawerOpen(true)} title="Loose pages (deleted)">
+        🍂 loose{looseCount ? ` (${looseCount})` : ''}
+      </button>
+      <button className="ctl-btn" onClick={exportImage} title="Save this spread as an image">
+        ⤓ image
+      </button>
+      <button className="ctl-btn" onClick={exportPdf} title="Export the whole volume as a PDF">
+        ⤓ pdf
+      </button>
       <span className="hint">{mobile ? 'swipe to turn' : '← → to turn the page'}</span>
+    </div>
+  );
+
+  const drawer = drawerOpen && (
+    <div className="drawer-scrim" onClick={() => setDrawerOpen(false)}>
+      <div className="drawer" onClick={(e) => e.stopPropagation()}>
+        <div className="drawer-head">
+          <h2>🍂 Loose pages</h2>
+          <button className="ctl-btn" onClick={() => setDrawerOpen(false)}>close</button>
+        </div>
+        <p className="drawer-sub">Deleted pieces rest here until you restore or clear them.</p>
+        {looseCount === 0 ? (
+          <p className="drawer-empty">Nothing loose. Deleted writing lands here.</p>
+        ) : (
+          <>
+            <ul className="loose-list">
+              {(volume.loosePages ?? []).map((lp) => (
+                <li key={lp.id} className="loose-item">
+                  <pre className="loose-text">{lp.text}</pre>
+                  <div className="loose-actions">
+                    <button className="ctl-btn" onClick={() => restoreLoose(lp)}>restore</button>
+                    <button className="ctl-btn danger" onClick={() => discardLoose(lp.id)}>discard</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <button className="ctl-btn danger" onClick={clearLoose}>clear all</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  // print-only rendering of the whole volume (for "export pdf" → Save as PDF)
+  const printView = (
+    <div className="print-root" aria-hidden="true">
+      {spreads.map((s) => (
+        <section className="print-spread" key={s.id}>
+          <div className="print-date">{prettyDate(s.date)}</div>
+          <div className="print-pages">
+            {(['left', 'right'] as const).map((side) => (
+              <div className="print-page" key={side}>
+                {s.blocks
+                  .filter((b) => b.page === side)
+                  .map((b) => (
+                    <div key={b.id} className="print-block" style={{ left: `${b.x}%`, top: `${b.y}%` }}>
+                      {b.text}
+                    </div>
+                  ))}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 
@@ -249,6 +369,7 @@ export function Notebook({
     return (
       <div className="stage mstage">
         <div
+          ref={bookRef}
           className={`mbook font-${volume.look.font} ${volume.look.lined ? 'lined' : ''}`}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
@@ -278,6 +399,8 @@ export function Notebook({
           {bookmark}
         </div>
         {controls}
+        {drawer}
+        {printView}
       </div>
     );
   }
@@ -290,6 +413,7 @@ export function Notebook({
   return (
     <div className="stage">
       <div
+        ref={bookRef}
         className={`book font-${volume.look.font} ${volume.look.lined ? 'lined' : ''}`}
         style={{ perspective: 2200 }}
         onTouchStart={onTouchStart}
@@ -330,6 +454,8 @@ export function Notebook({
       </div>
 
       {controls}
+      {drawer}
+      {printView}
     </div>
   );
 }

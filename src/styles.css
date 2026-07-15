@@ -269,9 +269,12 @@ body {
 }
 
 /* a free-placed writing block: hugs its text, sits wherever you clicked */
-.block {
+.block-wrap {
   position: absolute;
   z-index: 2;
+}
+.block {
+  display: block;
   border: none;
   outline: none;
   resize: none;
@@ -287,7 +290,47 @@ body {
   min-width: 1ch;
   tab-size: 4;
 }
-.block.static { pointer-events: none; }
+/* drag grip + delete appear on hover / focus-within */
+.block-grip,
+.block-del {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 3;
+  line-height: 1;
+  user-select: none;
+}
+.block-wrap:hover .block-grip,
+.block-wrap:focus-within .block-grip,
+.block-wrap:hover .block-del,
+.block-wrap:focus-within .block-del {
+  opacity: 0.65;
+}
+.block-grip {
+  left: -1.15rem;
+  top: 0;
+  cursor: grab;
+  color: #8a7a5c;
+  font-size: 0.9rem;
+  touch-action: none;
+}
+.block-grip:active { cursor: grabbing; }
+.block-del {
+  right: -1.15rem;
+  top: -0.15rem;
+  border: none;
+  background: transparent;
+  color: #9a5a4c;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.block-del:hover { opacity: 1 !important; }
+
+/* static block (on the flipping leaf) */
+.block.static {
+  position: absolute;
+  pointer-events: none;
+}
 .font-hand .block { font-size: 20px; }
 
 /* rose bookmark: a ribbon from the top of the book with a rose hanging into the page */
@@ -540,6 +583,95 @@ body {
 @media (max-width: 720px) {
   .setup { grid-template-columns: 1fr; gap: 2rem; }
   .cover-preview { max-width: 240px; margin: 0 auto; }
+}
+
+/* ---------- control buttons ---------- */
+.ctl-btn {
+  background: transparent;
+  border: 1px solid #5a4634;
+  color: #d8cba7;
+  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.ctl-btn:hover { background: #3a2d22; }
+.ctl-btn.danger { border-color: #7a3a34; color: #e0a094; }
+.ctl-btn.danger:hover { background: #4a201c; }
+
+/* ---------- loose pages drawer ---------- */
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: grid;
+  place-items: center;
+  z-index: 20;
+  padding: 1rem;
+}
+.drawer {
+  background: #2a211a;
+  color: #e8dcc0;
+  border: 1px solid #5a4634;
+  border-radius: 8px;
+  width: min(560px, 94vw);
+  max-height: 84vh;
+  overflow: auto;
+  padding: 1.4rem 1.5rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+.drawer-head { display: flex; align-items: center; justify-content: space-between; }
+.drawer-head h2 { margin: 0; font-weight: 500; font-size: 1.2rem; }
+.drawer-sub { opacity: 0.65; font-size: 0.88rem; margin: 0.3rem 0 1rem; }
+.drawer-empty { opacity: 0.6; font-style: italic; }
+.loose-list { list-style: none; margin: 0 0 1rem; padding: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.loose-item {
+  border: 1px solid #4a3a2c;
+  border-radius: 6px;
+  padding: 0.7rem 0.8rem;
+  background: #33291f;
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+.loose-text {
+  flex: 1;
+  margin: 0;
+  font-family: 'Iowan Old Style', Palatino, Georgia, serif;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 8rem;
+  overflow: auto;
+  color: #f0e7d2;
+}
+.loose-actions { display: flex; flex-direction: column; gap: 0.4rem; }
+
+/* ---------- print / export as PDF ---------- */
+.print-root { display: none; }
+@media print {
+  .stage,
+  .drawer-scrim { display: none !important; }
+  .print-root { display: block !important; }
+  @page { margin: 1.5cm; }
+  .print-spread { page-break-after: always; }
+  .print-date { font-style: italic; color: #555; margin-bottom: 0.6rem; font-family: Georgia, serif; }
+  .print-pages { display: flex; gap: 1.5cm; }
+  .print-page {
+    position: relative;
+    flex: 1;
+    height: 22cm;
+    border-left: 1px solid #eee;
+    padding-left: 0.5cm;
+  }
+  .print-block {
+    position: absolute;
+    white-space: pre;
+    font-family: 'Iowan Old Style', Palatino, Georgia, serif;
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #111;
+  }
 }
 
 /* ---------- phone: a single leaf at a time, with a 3D page-turn ---------- */
