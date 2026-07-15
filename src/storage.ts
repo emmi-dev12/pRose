@@ -1,13 +1,14 @@
-// Storage abstraction. Today: an IndexedDB backend holding a single encrypted blob.
-// The interface is intentionally backend-agnostic so a portable-file backend (USB /
-// air-gapped mode) can slot in later without touching the app.
+// Storage abstraction. Today: an IndexedDB backend holding a single encrypted blob
+// (the whole library). The interface is intentionally backend-agnostic so a
+// portable-file backend (USB / air-gapped mode) can slot in later.
 
 import { seal, open, type Sealed } from './crypto';
-import type { Volume } from './types';
+import { slugify, type Library, type Volume } from './types';
 
 const DB_NAME = 'prose';
 const STORE = 'vault';
-const KEY = 'notebook'; // single-volume slice
+const LIB_KEY = 'library'; // encrypted Library (all volumes)
+const OLD_KEY = 'notebook'; // legacy single-volume blob (pre-shelf)
 
 function idb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -42,26 +43,47 @@ function get<T>(key: string): Promise<T | undefined> {
   );
 }
 
+// Backfill fields a legacy volume (pre-shelf) might be missing.
+function normalizeVolume(v: Volume, taken: string[]): Volume {
+  let slug = v.slug || slugify(v.title);
+  while (taken.includes(slug)) slug = `${slug}-2`;
+  taken.push(slug);
+  return { ...v, slug, createdAt: v.createdAt || new Date().toISOString() };
+}
+
 export interface Storage {
-  /** Whether an encrypted notebook already exists on this device. */
+  /** Whether an encrypted library already exists on this device (new or legacy). */
   exists(): Promise<boolean>;
-  /** Decrypt and load with the given passphrase. Throws if the passphrase is wrong. */
-  load(passphrase: string): Promise<Volume>;
-  /** Encrypt and persist. */
-  save(passphrase: string, volume: Volume): Promise<void>;
+  /** Decrypt and load the library. Throws if the passphrase is wrong. */
+  load(passphrase: string): Promise<Library>;
+  /** Encrypt and persist the library. */
+  save(passphrase: string, library: Library): Promise<void>;
 }
 
 export const indexedDbStorage: Storage = {
   async exists() {
-    return (await get<Sealed>(KEY)) !== undefined;
+    return (await get<Sealed>(LIB_KEY)) !== undefined || (await get<Sealed>(OLD_KEY)) !== undefined;
   },
+
   async load(passphrase) {
-    const sealed = await get<Sealed>(KEY);
-    if (!sealed) throw new Error('no-notebook');
-    const json = await open(passphrase, sealed); // throws on wrong passphrase (AES-GCM auth)
-    return JSON.parse(json) as Volume;
+    const sealed = await get<Sealed>(LIB_KEY);
+    if (sealed) {
+      const lib = JSON.parse(await open(passphrase, sealed)) as Library;
+      const taken: string[] = [];
+      return { volumes: lib.volumes.map((v) => normalizeVolume(v, taken)) };
+    }
+    // migrate a legacy single-volume notebook into a one-volume library
+    const legacy = await get<Sealed>(OLD_KEY);
+    if (legacy) {
+      const vol = JSON.parse(await open(passphrase, legacy)) as Volume; // throws on wrong pass
+      const lib: Library = { volumes: [normalizeVolume(vol, [])] };
+      await this.save(passphrase, lib); // persist in the new shape
+      return lib;
+    }
+    throw new Error('no-library');
   },
-  async save(passphrase, volume) {
-    await put(KEY, await seal(passphrase, JSON.stringify(volume)));
+
+  async save(passphrase, library) {
+    await put(LIB_KEY, await seal(passphrase, JSON.stringify(library)));
   },
 };

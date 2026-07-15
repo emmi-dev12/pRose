@@ -35,12 +35,41 @@ export interface Spread {
 export interface Volume {
   id: string;
   title: string;
+  slug: string; // url-friendly, unique within the library — routes as #/v/<slug>
   look: VolumeLook;
   spreads: Spread[]; // chronological, oldest → newest
+  createdAt: string; // ISO — for ordering the shelf
+}
+
+// The whole shelf: every volume the writer owns, encrypted together under one passphrase.
+export interface Library {
+  volumes: Volume[];
 }
 
 export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+// turn a title into a url slug: "The Wilting Hours!" → "the-wilting-hours"
+export function slugify(title: string): string {
+  const base = title
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return base || 'volume';
+}
+
+// ensure a slug is unique within the library (appends -2, -3, …)
+export function uniqueSlug(title: string, taken: string[]): string {
+  const base = slugify(title);
+  if (!taken.includes(base)) return base;
+  let n = 2;
+  while (taken.includes(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
 }
 
 export function newSpread(date: string): Spread {
@@ -63,11 +92,17 @@ export function defaultLook(): VolumeLook {
   };
 }
 
-export function newVolume(title = 'Volume I', look: VolumeLook = defaultLook()): Volume {
+export function newVolume(
+  title = 'Volume I',
+  look: VolumeLook = defaultLook(),
+  taken: string[] = [],
+): Volume {
   return {
     id: crypto.randomUUID(),
     title,
+    slug: uniqueSlug(title, taken),
     look,
     spreads: [newSpread(todayISO())],
+    createdAt: new Date().toISOString(),
   };
 }
