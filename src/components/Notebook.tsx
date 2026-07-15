@@ -94,7 +94,7 @@ export function Notebook({
 
   return (
     <div className="stage">
-      <div className="book" style={{ perspective: 2200 }}>
+      <div className={`book font-${volume.look.font}`} style={{ perspective: 2200 }}>
         {/* left page */}
         <div className="page left">
           <div className="page-date">{prettyDate(baseLeft.date)}</div>
