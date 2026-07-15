@@ -82,6 +82,11 @@ export function Notebook({
     [cur, setSpread],
   );
 
+  const toggleBookmark = useCallback(
+    () => setSpread({ ...cur, bookmarked: !cur.bookmarked }),
+    [cur, setSpread],
+  );
+
   const commit = useCallback((dir: 'next' | 'prev') => {
     setI((n) => n + (dir === 'next' ? 1 : -1));
     setFlip(null);
@@ -177,6 +182,18 @@ export function Notebook({
           </div>
         )}
 
+        {/* rose bookmark tucked into this spread */}
+        {cur.bookmarked && !flip && (
+          <img
+            className="bookmark"
+            src="./rose.svg"
+            alt="bookmark"
+            title="Remove bookmark"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={toggleBookmark}
+          />
+        )}
+
         {/* edge affordances */}
         <button className="turn prev" onMouseDown={(e) => e.stopPropagation()} onClick={() => turn('prev')} disabled={i === 0} aria-label="previous day">‹</button>
         <button className="turn next" onMouseDown={(e) => e.stopPropagation()} onClick={() => turn('next')} aria-label="next day">›</button>
@@ -189,6 +206,13 @@ export function Notebook({
           </button>
         )}
         <span className="brand">{volume.title}</span>
+        <button
+          className={`bookmark-btn ${cur.bookmarked ? 'on' : ''}`}
+          onClick={toggleBookmark}
+          title="Bookmark this page"
+        >
+          🌹 {cur.bookmarked ? 'bookmarked' : 'bookmark'}
+        </button>
         <span className="hint">← → to turn the page</span>
       </div>
     </div>

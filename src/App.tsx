@@ -134,6 +134,7 @@ export function App() {
         <div className="lock-card">
           <div className="lock-rose">🥀</div>
           <h1>pRose</h1>
+          <div className="tagline">Poetry, Prose &amp; Roses</div>
           <p>
             {hasNotebook
               ? 'Enter your passphrase to open your shelf.'

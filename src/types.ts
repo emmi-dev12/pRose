@@ -40,6 +40,7 @@ export interface Spread {
   id: string;
   date: string; // ISO yyyy-mm-dd — the day this spread belongs to
   blocks: Block[];
+  bookmarked?: boolean; // a rose bookmark tucked into this spread
   leftText?: string; // legacy (pre-blocks) — migrated into blocks on load
   rightText?: string;
 }

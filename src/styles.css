@@ -35,7 +35,13 @@ body {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 .lock-rose { font-size: 2.6rem; }
-.lock-card h1 { margin: 0.2rem 0 0.6rem; letter-spacing: 0.02em; }
+.lock-card h1 { margin: 0.2rem 0 0.2rem; letter-spacing: 0.02em; }
+.tagline {
+  font-style: italic;
+  color: #8a7a5c;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.8rem;
+}
 .lock-card p { color: #5a5040; line-height: 1.5; font-size: 0.95rem; }
 .lock-card form { display: flex; gap: 0.5rem; margin-top: 1.2rem; }
 .lock-card input {
@@ -283,6 +289,43 @@ body {
 }
 .block.static { pointer-events: none; }
 .font-hand .block { font-size: 20px; }
+
+/* rose bookmark: a ribbon from the top of the book with a rose hanging into the page */
+.bookmark {
+  position: absolute;
+  top: -18px;
+  right: 46px;
+  width: 30px;
+  z-index: 7;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.4));
+  transition: transform 0.15s;
+}
+.bookmark:hover { transform: translateY(-3px); }
+.bookmark::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -46px;
+  width: 7px;
+  height: 60px;
+  background: linear-gradient(#7a1f2b, #9c2f3c);
+  border-radius: 2px 2px 0 0;
+  z-index: -1;
+}
+.bookmark-btn {
+  background: transparent;
+  border: 1px solid #5a4634;
+  color: #d8cba7;
+  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.bookmark-btn.on { background: #4a2230; border-color: #7a3040; color: #f3d9df; }
+.bookmark-btn:hover { background: #3a2d22; }
 
 /* faint invitation on an empty page */
 .page-hint {
