@@ -744,7 +744,12 @@ body {
 }
 
 /* ---------- phone: a single leaf at a time, with a 3D page-turn ---------- */
-.mstage { justify-content: flex-start; padding-top: 1.2rem; }
+.mstage {
+  justify-content: flex-start;
+  /* clear the status bar / notch and home indicator (viewport-fit=cover) */
+  padding-top: calc(1.2rem + env(safe-area-inset-top));
+  padding-bottom: calc(0.6rem + env(safe-area-inset-bottom));
+}
 .mbook {
   position: relative;
   width: 94vw;
@@ -786,10 +791,20 @@ body {
   .turn { display: none; } /* swipe instead */
   .bookmark { right: 18px; top: -14px; width: 26px; }
   .controls { flex-wrap: wrap; justify-content: center; gap: 0.4rem 1rem; font-size: 0.85rem; }
-  .setup { padding: 1.4rem 1rem 3rem; grid-template-columns: 1fr; gap: 1.4rem; }
+  /* respect the notch / status bar and home indicator on all top-level screens */
+  .shelf {
+    padding: calc(1.4rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right))
+      calc(3rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
+  }
+  .setup {
+    padding: calc(1.4rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right))
+      calc(3rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+  }
+  .lock { padding: calc(2rem + env(safe-area-inset-top)) 1.2rem calc(2rem + env(safe-area-inset-bottom)); }
   .cover-preview { max-width: 170px; margin: 0 auto; }
   .setup-form { max-width: 100%; }
-  .shelf { padding: 1.4rem 1rem 3rem; }
   .shelf-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
   .lock-card { padding: 2rem 1.4rem; }
 }
