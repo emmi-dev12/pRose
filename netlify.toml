@@ -1,0 +1,10 @@
+# Netlify build config for pRose (static Vite app; all data stays in the browser).
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# App uses hash routing, but keep an SPA fallback just in case.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
