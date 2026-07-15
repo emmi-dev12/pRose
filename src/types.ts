@@ -33,6 +33,7 @@ export interface Block {
   page: 'left' | 'right';
   x: number; // top-left anchor, % of the page's writable width
   y: number; // top-left anchor, % of the page's writable height
+  w?: number; // optional fixed width, % of page width — set by resizing; text wraps within it
   text: string; // whitespace preserved exactly
 }
 

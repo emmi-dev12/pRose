@@ -27,7 +27,11 @@ function StaticBlocks({ spread, side }: { spread: Spread; side: 'left' | 'right'
       {spread.blocks
         .filter((b) => b.page === side)
         .map((b) => (
-          <div key={b.id} className="block static" style={{ left: `${b.x}%`, top: `${b.y}%` }}>
+          <div
+            key={b.id}
+            className="block static"
+            style={{ left: `${b.x}%`, top: `${b.y}%`, width: b.w != null ? `${b.w}%` : undefined }}
+          >
             {b.text}
           </div>
         ))}
@@ -105,6 +109,11 @@ export function Notebook({
   const moveBlock = useCallback(
     (id: string, x: number, y: number) =>
       setSpread({ ...cur, blocks: cur.blocks.map((b) => (b.id === id ? { ...b, x, y } : b)) }),
+    [cur, setSpread],
+  );
+  const resizeBlock = useCallback(
+    (id: string, w: number) =>
+      setSpread({ ...cur, blocks: cur.blocks.map((b) => (b.id === id ? { ...b, w } : b)) }),
     [cur, setSpread],
   );
 
@@ -287,6 +296,7 @@ export function Notebook({
           onChange={(t) => editBlock(b.id, t)}
           onCommitEmpty={() => removeBlock(b.id)}
           onMove={(x, y) => moveBlock(b.id, x, y)}
+          onResize={(w) => resizeBlock(b.id, w)}
           onDelete={() => deleteBlock(b.id)}
           minY={PROTECT_Y}
         />
@@ -445,7 +455,7 @@ export function Notebook({
                 {s.blocks
                   .filter((b) => b.page === side)
                   .map((b) => (
-                    <div key={b.id} className="print-block" style={{ left: `${b.x}%`, top: `${b.y}%` }}>
+                    <div key={b.id} className="print-block" style={{ left: `${b.x}%`, top: `${b.y}%`, width: b.w != null ? `${b.w}%` : undefined }}>
                       {b.text}
                     </div>
                   ))}
