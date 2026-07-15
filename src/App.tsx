@@ -45,6 +45,7 @@ export function App() {
           passRef.current = saved;
           setLibrary(lib);
           setPhase('ready');
+          navigate(lib.volumes.length ? '#/' : '#/new'); // always open to the shelf (home)
           return;
         } catch {
           forgetPass(); // stale/invalid saved pass
@@ -63,7 +64,7 @@ export function App() {
         if (remember) rememberPass(pass);
         setLibrary(lib);
         setPhase('ready');
-        navigate('#/');
+        navigate(lib.volumes.length ? '#/' : '#/new');
       } else {
         // brand-new device: hold the passphrase, start an empty library
         passRef.current = pass;
