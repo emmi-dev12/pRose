@@ -106,6 +106,17 @@ export function App() {
     [library, persist],
   );
 
+  const deleteVolume = useCallback(
+    async (v: Volume) => {
+      if (!window.confirm(`Delete “${v.title}” and everything in it? This can’t be undone.`)) return;
+      const next = { volumes: (library?.volumes ?? []).filter((x) => x.id !== v.id) };
+      setLibrary(next);
+      await persist(next);
+      navigate('#/');
+    },
+    [library, persist],
+  );
+
   const lock = useCallback(() => {
     forgetPass();
     passRef.current = '';
@@ -178,6 +189,7 @@ export function App() {
       onOpen={(slug) => navigate(`#/v/${slug}`)}
       onNew={() => navigate('#/new')}
       onLock={lock}
+      onDelete={deleteVolume}
     />
   );
 }

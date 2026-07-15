@@ -12,10 +12,11 @@ export type AgingMode = 'dressed' | 'living';
 export interface VolumeLook {
   seed: number; // hidden per-volume seed → deterministic wear placement
   preset: WearPreset;
-  intensity: number; // 0..1 dial
+  intensity: number; // 0..1 dial (only meaningful when agingMode === 'dressed')
   cover: CoverStyle;
   font: FontChoice;
   agingMode: AgingMode;
+  lined: boolean; // ruled lines on/off
 }
 
 export const COVERS: CoverStyle[] = ['oxblood', 'moss', 'ink', 'sand', 'plum'];
@@ -46,8 +47,19 @@ export interface Library {
   volumes: Volume[];
 }
 
+const pad = (n: number) => String(n).padStart(2, '0');
+const isoOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+// Local-date based, so "today" matches the writer's calendar (not UTC).
 export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return isoOf(new Date());
+}
+
+// The next calendar day. Built from local date parts so it ALWAYS advances —
+// no UTC round-trip (which silently repeated the date in eastern timezones).
+export function nextDay(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return isoOf(new Date(y, m - 1, d + 1));
 }
 
 // turn a title into a url slug: "The Wilting Hours!" → "the-wilting-hours"
@@ -89,6 +101,7 @@ export function defaultLook(): VolumeLook {
     cover: 'oxblood',
     font: 'serif',
     agingMode: 'dressed',
+    lined: true,
   };
 }
 

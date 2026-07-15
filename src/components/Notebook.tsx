@@ -1,17 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Volume, WearPreset } from '../types';
-import { newSpread } from '../types';
-import { computeWear } from '../wear';
+import { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import type { Volume } from '../types';
+import { newSpread, nextDay } from '../types';
+import { computeWear, effectiveAmount } from '../wear';
 import { WearLayer } from './WearLayer';
 import { PoemEditor } from './PoemEditor';
-
-const PRESETS: WearPreset[] = ['brand-new', 'well-loved', 'survived-a-flood'];
-
-function nextDay(iso: string): string {
-  const d = new Date(iso + 'T00:00:00');
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
 
 function prettyDate(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString(undefined, {
@@ -35,7 +27,20 @@ export function Notebook({
 }) {
   const [i, setI] = useState(volume.spreads.length - 1); // open to the newest day
   const [flip, setFlip] = useState<Flip>(null);
-  const marks = useMemo(() => computeWear(volume.look), [volume.look]);
+  // wear reflects the dial (dressed) or accumulated use (living)
+  const marks = useMemo(() => computeWear(volume.look, effectiveAmount(volume)), [volume]);
+
+  // click the blank part of a page to keep writing — focus its editor, caret at end.
+  // clicking directly on the text lets the browser place the caret where you clicked.
+  const focusPage = (e: MouseEvent) => {
+    if ((e.target as HTMLElement).tagName === 'TEXTAREA') return;
+    const ta = (e.currentTarget as HTMLElement).querySelector('textarea');
+    if (ta && !ta.disabled) {
+      e.preventDefault(); // keep focus on the textarea, not the page div
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    }
+  };
 
   const spreads = volume.spreads;
   const cur = spreads[i];
@@ -96,9 +101,12 @@ export function Notebook({
 
   return (
     <div className="stage">
-      <div className={`book font-${volume.look.font}`} style={{ perspective: 2200 }}>
+      <div
+        className={`book font-${volume.look.font} ${volume.look.lined ? 'lined' : ''}`}
+        style={{ perspective: 2200 }}
+      >
         {/* left page */}
-        <div className="page left">
+        <div className="page left" onMouseDown={focusPage}>
           <div className="page-date">{prettyDate(baseLeft.date)}</div>
           <PoemEditor
             value={baseLeft.leftText}
@@ -110,7 +118,7 @@ export function Notebook({
         </div>
 
         {/* right page */}
-        <div className="page right">
+        <div className="page right" onMouseDown={focusPage}>
           <PoemEditor
             value={baseRight.rightText}
             disabled={!!flip}
@@ -162,34 +170,6 @@ export function Notebook({
           </button>
         )}
         <span className="brand">{volume.title}</span>
-        <label>
-          wear&nbsp;
-          <select
-            value={volume.look.preset}
-            onChange={(e) =>
-              onChange({ ...volume, look: { ...volume.look, preset: e.target.value as WearPreset } })
-            }
-          >
-            {PRESETS.map((p) => (
-              <option key={p} value={p}>
-                {p.replace(/-/g, ' ')}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          intensity&nbsp;
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume.look.intensity}
-            onChange={(e) =>
-              onChange({ ...volume, look: { ...volume.look, intensity: Number(e.target.value) } })
-            }
-          />
-        </label>
         <span className="hint">← → to turn the page</span>
       </div>
     </div>

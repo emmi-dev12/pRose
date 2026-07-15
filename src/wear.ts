@@ -2,7 +2,7 @@
 // makes the coffee ring, spine crease and dog-ear land in the *same place every time*,
 // so it reads as *this* book. Wear is derived, never stored.
 
-import type { VolumeLook, WearPreset } from './types';
+import type { Volume, VolumeLook, WearPreset } from './types';
 
 // Small deterministic PRNG (mulberry32) — same seed → same stream, every reload.
 function rng(seed: number) {
@@ -24,23 +24,36 @@ const PRESET_BASE: Record<WearPreset, number> = {
 
 export interface WearMarks {
   amount: number; // effective 0..1 (preset × dial), drives every mark's strength
-  ring: { x: number; y: number; r: number }; // coffee ring, in % of page
-  ringGhost: number; // faint bleed-through strength on the facing page
   dogEar: number; // 0..1 corner softness (bottom-outer corner)
   spine: number; // 0..1 crease darkness at the gutter
   smudges: { x: number; y: number; r: number; o: number }[];
 }
 
-// Deterministic per volume: seed + preset + intensity fully determine the marks.
-export function computeWear(look: VolumeLook): WearMarks {
-  const r = rng(look.seed);
-  const amount = Math.min(1, PRESET_BASE[look.preset] * (0.4 + look.intensity * 1.4));
+// How worn a "living" volume is, derived from real use: the more days you keep
+// and the more you write, the older it gets. Deterministic from content, 0..1.
+export function livingAge(volume: Volume): number {
+  const days = volume.spreads.length - 1;
+  const chars = volume.spreads.reduce((n, s) => n + s.leftText.length + s.rightText.length, 0);
+  return Math.min(1, days / 45 + chars / 9000);
+}
 
-  const ring = {
-    x: 20 + r() * 55, // stays off the very edges
-    y: 20 + r() * 55,
-    r: 5 + r() * 4,
-  };
+// The effective wear (0..1) for a volume: a fixed dial when it was dressed at
+// creation, or accumulated use when it's set to age on its own.
+export function effectiveAmount(volume: Volume): number {
+  if (volume.look.agingMode === 'living') {
+    // starts brand-new, then ages with use
+    return Math.min(1, PRESET_BASE['brand-new'] * 0.4 + livingAge(volume));
+  }
+  return Math.min(1, PRESET_BASE[volume.look.preset] * (0.4 + volume.look.intensity * 1.4));
+}
+
+// Deterministic per volume: seed + an explicit wear amount fully determine the marks.
+export function computeWear(look: VolumeLook, amountOverride?: number): WearMarks {
+  const r = rng(look.seed);
+  const amount =
+    amountOverride ?? Math.min(1, PRESET_BASE[look.preset] * (0.4 + look.intensity * 1.4));
+
+  // faint ink foxing scattered across the page — subtle age, no coffee stains
   const smudges = Array.from({ length: Math.round(amount * 5) }, () => ({
     x: r() * 100,
     y: r() * 100,
@@ -50,8 +63,6 @@ export function computeWear(look: VolumeLook): WearMarks {
 
   return {
     amount,
-    ring,
-    ringGhost: amount * 0.35,
     dogEar: amount,
     spine: 0.25 + amount * 0.55,
     smudges,
