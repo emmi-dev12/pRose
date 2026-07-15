@@ -55,7 +55,13 @@ export function VolumeSetup({
         <WearLayer marks={marks} side="left" />
       </div>
 
-      <div className="setup-form">
+      <form
+        className="setup-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!saving) begin();
+        }}
+      >
         <h1>Begin a volume</h1>
         <p className="setup-sub">Dress the notebook you're about to fill. You can change your mind later.</p>
 
@@ -137,11 +143,11 @@ export function VolumeSetup({
           </div>
         </div>
 
-        <button className="begin" onClick={begin} disabled={saving}>
+        <button className="begin" type="submit" disabled={saving}>
           {saving ? 'Saving…' : 'Open to the first page →'}
         </button>
         {error && <div className="setup-error">{error}</div>}
-      </div>
+      </form>
     </div>
   );
 }
