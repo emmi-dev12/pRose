@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Volume } from '../types';
 import { newSpread, nextDay } from '../types';
-import { computeWear } from '../wear';
+import { computeWear, effectiveAmount } from '../wear';
 import { WearLayer } from './WearLayer';
 import { PoemEditor } from './PoemEditor';
 
@@ -27,7 +27,20 @@ export function Notebook({
 }) {
   const [i, setI] = useState(volume.spreads.length - 1); // open to the newest day
   const [flip, setFlip] = useState<Flip>(null);
-  const marks = useMemo(() => computeWear(volume.look), [volume.look]);
+  // wear reflects the dial (dressed) or accumulated use (living)
+  const marks = useMemo(() => computeWear(volume.look, effectiveAmount(volume)), [volume]);
+
+  // click the blank part of a page to keep writing — focus its editor, caret at end.
+  // clicking directly on the text lets the browser place the caret where you clicked.
+  const focusPage = (e: MouseEvent) => {
+    if ((e.target as HTMLElement).tagName === 'TEXTAREA') return;
+    const ta = (e.currentTarget as HTMLElement).querySelector('textarea');
+    if (ta && !ta.disabled) {
+      e.preventDefault(); // keep focus on the textarea, not the page div
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    }
+  };
 
   const spreads = volume.spreads;
   const cur = spreads[i];
@@ -88,9 +101,12 @@ export function Notebook({
 
   return (
     <div className="stage">
-      <div className={`book font-${volume.look.font}`} style={{ perspective: 2200 }}>
+      <div
+        className={`book font-${volume.look.font} ${volume.look.lined ? 'lined' : ''}`}
+        style={{ perspective: 2200 }}
+      >
         {/* left page */}
-        <div className="page left">
+        <div className="page left" onMouseDown={focusPage}>
           <div className="page-date">{prettyDate(baseLeft.date)}</div>
           <PoemEditor
             value={baseLeft.leftText}
@@ -102,7 +118,7 @@ export function Notebook({
         </div>
 
         {/* right page */}
-        <div className="page right">
+        <div className="page right" onMouseDown={focusPage}>
           <PoemEditor
             value={baseRight.rightText}
             disabled={!!flip}

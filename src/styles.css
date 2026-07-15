@@ -214,6 +214,7 @@ body {
   position: relative;
   flex: 1;
   overflow: hidden;
+  cursor: text; /* the whole page invites writing */
   padding: 2.4rem 2.6rem 2.4rem 3.4rem;
   /* paper fiber (feTurbulence) over a warm uneven wash */
   background-image:
@@ -221,7 +222,8 @@ body {
     radial-gradient(120% 90% at 30% 20%, #fbf5e4 0%, var(--paper) 45%, var(--paper-shade) 100%);
 }
 /* the margin rule — a faded red line, like a real ruled notebook */
-.page::before {
+/* margin rule only on ruled ("lined") volumes */
+.lined .page::before {
   content: '';
   position: absolute;
   top: 0;
@@ -232,7 +234,7 @@ body {
   pointer-events: none;
   z-index: 1;
 }
-.page.right::before { left: auto; right: 2.5rem; }
+.lined .page.right::before { left: auto; right: 2.5rem; }
 .page.right { padding: 2.4rem 3.4rem 2.4rem 2.6rem; }
 .page.left {
   border-radius: 3px 0 0 3px;
@@ -268,7 +270,10 @@ body {
   white-space: pre;       /* preserve indentation exactly, no wrap-collapsing */
   overflow: auto;
   tab-size: 4;
-  /* actual ruled lines, drawn per text-line and scrolling WITH the text */
+}
+.poem::placeholder { color: #b3a684; font-style: italic; }
+/* ruled lines are opt-in per volume (.lined), drawn per text-line, scrolling WITH text */
+.lined .poem {
   background-image: linear-gradient(
     to bottom,
     transparent calc(var(--lh) - 1.5px),
@@ -278,7 +283,6 @@ body {
   background-size: 100% var(--lh);
   background-attachment: local;
 }
-.poem::placeholder { color: #b3a684; font-style: italic; }
 
 /* ---------- wear overlay ---------- */
 .wear {
@@ -469,6 +473,13 @@ body {
 .begin:hover { background: #7d5836; }
 .begin:disabled { opacity: 0.6; cursor: default; }
 .setup-error { margin-top: 0.8rem; color: #e0897c; font-size: 0.88rem; }
+.setup-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #b6a888;
+  font-style: italic;
+}
 
 @media (max-width: 720px) {
   .setup { grid-template-columns: 1fr; gap: 2rem; }

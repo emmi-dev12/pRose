@@ -108,47 +108,78 @@ export function VolumeSetup({
           </div>
         </div>
 
-        <label className="field">
-          <span>Wear</span>
-          <select value={look.preset} onChange={(e) => set({ preset: e.target.value as WearPreset })}>
-            {PRESETS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="field">
-          <span>Intensity</span>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={look.intensity}
-            onChange={(e) => set({ intensity: Number(e.target.value) })}
-          />
-        </label>
+        <div className="field">
+          <span>Pages</span>
+          <div className="segmented">
+            <button
+              type="button"
+              className={`seg ${look.lined ? 'on' : ''}`}
+              onClick={() => set({ lined: true })}
+            >
+              Ruled lines
+            </button>
+            <button
+              type="button"
+              className={`seg ${!look.lined ? 'on' : ''}`}
+              onClick={() => set({ lined: false })}
+            >
+              Blank
+            </button>
+          </div>
+        </div>
 
         <div className="field">
           <span>Aging</span>
           <div className="segmented">
             {([
-              ['dressed', 'Set it, then it lives'],
-              ['living', 'Let it age as I use it'],
+              ['dressed', 'Dress it now'],
+              ['living', 'Let it age with me'],
             ] as [AgingMode, string][]).map(([id, label]) => (
               <button
                 key={id}
                 type="button"
                 className={`seg ${look.agingMode === id ? 'on' : ''}`}
-                onClick={() => set({ agingMode: id })}
+                onClick={() =>
+                  // "living" starts brand-new and wears in with use → no dial
+                  set(id === 'living' ? { agingMode: id, preset: 'brand-new', intensity: 0 } : { agingMode: id })
+                }
               >
                 {label}
               </button>
             ))}
           </div>
         </div>
+
+        {look.agingMode === 'dressed' ? (
+          <>
+            <label className="field">
+              <span>Wear</span>
+              <select value={look.preset} onChange={(e) => set({ preset: e.target.value as WearPreset })}>
+                {PRESETS.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Intensity</span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={look.intensity}
+                onChange={(e) => set({ intensity: Number(e.target.value) })}
+              />
+            </label>
+          </>
+        ) : (
+          <p className="setup-note">
+            Starts brand-new and wears in as you write — the corners soften, the paper
+            ages, the more you fill it.
+          </p>
+        )}
 
         <button className="begin" type="submit" disabled={saving}>
           {saving ? 'Saving…' : 'Open to the first page →'}

@@ -27,7 +27,15 @@ export function WearLayer({ marks, side }: { marks: WearMarks; side: 'left' | 'r
           <stop offset="0%" stopColor={`rgba(40,26,12,${marks.spine * 0.5})`} />
           <stop offset="14%" stopColor="rgba(40,26,12,0)" />
         </linearGradient>
+        {/* aged paper: edges yellow-brown and darken with age */}
+        <radialGradient id={`edge-${side}`} cx="50%" cy="48%" r="70%">
+          <stop offset="55%" stopColor="rgba(112,78,34,0)" />
+          <stop offset="100%" stopColor={`rgba(112,78,34,${0.04 + marks.amount * 0.3})`} />
+        </radialGradient>
       </defs>
+
+      {/* aged edge darkening */}
+      <rect x="0" y="0" width="100" height="100" fill={`url(#edge-${side})`} />
 
       {/* spine crease at the gutter */}
       <rect x="0" y="0" width="100" height="100" fill={`url(#spine-${side})`} />

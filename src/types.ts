@@ -12,10 +12,11 @@ export type AgingMode = 'dressed' | 'living';
 export interface VolumeLook {
   seed: number; // hidden per-volume seed → deterministic wear placement
   preset: WearPreset;
-  intensity: number; // 0..1 dial
+  intensity: number; // 0..1 dial (only meaningful when agingMode === 'dressed')
   cover: CoverStyle;
   font: FontChoice;
   agingMode: AgingMode;
+  lined: boolean; // ruled lines on/off
 }
 
 export const COVERS: CoverStyle[] = ['oxblood', 'moss', 'ink', 'sand', 'plum'];
@@ -100,6 +101,7 @@ export function defaultLook(): VolumeLook {
     cover: 'oxblood',
     font: 'serif',
     agingMode: 'dressed',
+    lined: true,
   };
 }
 

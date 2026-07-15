@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Library, Volume } from '../types';
-import { computeWear } from '../wear';
+import { computeWear, effectiveAmount } from '../wear';
 import { WearLayer } from './WearLayer';
 
 function Spine({
@@ -12,7 +12,7 @@ function Spine({
   onOpen: (slug: string) => void;
   onDelete: (v: Volume) => void;
 }) {
-  const marks = useMemo(() => computeWear(volume.look), [volume.look]);
+  const marks = useMemo(() => computeWear(volume.look, effectiveAmount(volume)), [volume]);
   return (
     <div className={`shelf-book cover-${volume.look.cover}`}>
       <button className="shelf-open" onClick={() => onOpen(volume.slug)} aria-label={`Open ${volume.title}`}>
