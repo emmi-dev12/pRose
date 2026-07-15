@@ -40,9 +40,10 @@ export function App() {
     }
   }, [hasNotebook, pass]);
 
+  // may throw if storage is unavailable (quota, private-mode); VolumeSetup surfaces it
   const createVolume = useCallback(async (title: string, look: VolumeLook) => {
     const v = newVolume(title, look);
-    await store.save(passRef.current, v);
+    await store.save(passRef.current, v); // must succeed before we leave setup
     setVolume(v);
     setPhase('ready');
   }, []);

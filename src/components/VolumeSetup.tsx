@@ -23,12 +23,26 @@ const PRESETS: { id: WearPreset; label: string }[] = [
 export function VolumeSetup({
   onComplete,
 }: {
-  onComplete: (title: string, look: VolumeLook) => void;
+  onComplete: (title: string, look: VolumeLook) => Promise<void>;
 }) {
   const [title, setTitle] = useState('Volume I');
   const [look, setLook] = useState<VolumeLook>(defaultLook());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const marks = useMemo(() => computeWear(look), [look]);
   const set = (patch: Partial<VolumeLook>) => setLook((l) => ({ ...l, ...patch }));
+
+  const begin = async () => {
+    setError('');
+    setSaving(true);
+    try {
+      await onComplete(title.trim() || 'Volume I', look);
+    } catch {
+      // storage unavailable (quota / private mode) — keep the writer here, let them retry
+      setError('Couldn’t save your notebook — your browser may be blocking storage (private mode?). Try again.');
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="setup">
@@ -123,9 +137,10 @@ export function VolumeSetup({
           </div>
         </div>
 
-        <button className="begin" onClick={() => onComplete(title.trim() || 'Volume I', look)}>
-          Open to the first page →
+        <button className="begin" onClick={begin} disabled={saving}>
+          {saving ? 'Saving…' : 'Open to the first page →'}
         </button>
+        {error && <div className="setup-error">{error}</div>}
       </div>
     </div>
   );
