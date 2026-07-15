@@ -17,6 +17,7 @@ function prettyDate(iso: string): string {
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
+const PROTECT_Y = 9; // % reserved at the top for the date — no blocks up here
 const MOBILE = '(max-width: 700px)';
 
 // Static (non-editable) rendering of a page's blocks — used on the flipping leaf.
@@ -76,8 +77,10 @@ export function Notebook({
       if (flip || mFlip) return;
       e.preventDefault(); // don't start a text selection on the paper
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const rawY = ((e.clientY - rect.top) / rect.height) * 100;
+      if (rawY < PROTECT_Y) return; // the date's protected header — don't start a block here
       const x = clamp(((e.clientX - rect.left) / rect.width) * 100, 2, 86);
-      const y = clamp(((e.clientY - rect.top) / rect.height) * 100, 3, 90);
+      const y = clamp(rawY, PROTECT_Y, 90);
       const nb = newBlock(side, x, y);
       setSpread({ ...cur, blocks: [...cur.blocks, nb] });
       setFocusId(nb.id);
@@ -138,7 +141,19 @@ export function Notebook({
   const clearLoose = useCallback(() => onChange({ ...volume, loosePages: [] }), [volume, onChange]);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [contentsOpen, setContentsOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const bookRef = useRef<HTMLDivElement>(null);
+
+  // jump straight to a spread (and, on mobile, the right leaf)
+  const jumpTo = useCallback((idx: number, side: 'left' | 'right' = 'left') => {
+    setFlip(null);
+    setMFlip(null);
+    setI(idx);
+    setMSide(side);
+    setContentsOpen(false);
+    setQuery('');
+  }, []);
 
   const exportImage = useCallback(async () => {
     if (!bookRef.current) return;
@@ -258,6 +273,7 @@ export function Notebook({
           onCommitEmpty={() => removeBlock(b.id)}
           onMove={(x, y) => moveBlock(b.id, x, y)}
           onDelete={() => deleteBlock(b.id)}
+          minY={PROTECT_Y}
         />
       ));
 
@@ -283,6 +299,9 @@ export function Notebook({
       >
         🌹 {cur.bookmarked ? 'bookmarked' : 'bookmark'}
       </button>
+      <button className="ctl-btn" onClick={() => setContentsOpen(true)} title="Contents & search">
+        ☰ contents
+      </button>
       <button className="ctl-btn" onClick={() => setDrawerOpen(true)} title="Loose pages (deleted)">
         🍂 loose{looseCount ? ` (${looseCount})` : ''}
       </button>
@@ -293,6 +312,71 @@ export function Notebook({
         ⤓ pdf
       </button>
       <span className="hint">{mobile ? 'swipe to turn' : '← → to turn the page'}</span>
+    </div>
+  );
+
+  const firstLine = (t: string) => (t.split('\n').find((l) => l.trim()) ?? '').trim();
+  const q = query.trim().toLowerCase();
+  const results = q
+    ? spreads.flatMap((s, idx) =>
+        s.blocks
+          .filter((b) => b.text.toLowerCase().includes(q))
+          .map((b) => {
+            const line = b.text.split('\n').find((l) => l.toLowerCase().includes(q)) ?? firstLine(b.text);
+            return { idx, side: b.page, date: s.date, snippet: line.trim().slice(0, 80) };
+          }),
+      )
+    : [];
+
+  const contents = contentsOpen && (
+    <div className="drawer-scrim" onClick={() => setContentsOpen(false)}>
+      <div className="drawer" onClick={(e) => e.stopPropagation()}>
+        <div className="drawer-head">
+          <h2>☰ Contents</h2>
+          <button className="ctl-btn" onClick={() => setContentsOpen(false)}>close</button>
+        </div>
+        <input
+          className="toc-search"
+          type="search"
+          placeholder="search this volume…"
+          autoFocus
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {q ? (
+          results.length ? (
+            <ul className="toc-list">
+              {results.map((r, k) => (
+                <li key={k}>
+                  <button className="toc-item" onClick={() => jumpTo(r.idx, r.side)}>
+                    <span className="toc-date">{prettyDate(r.date)}</span>
+                    <span className="toc-preview">{r.snippet || '…'}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="drawer-empty">No matches for “{query}”.</p>
+          )
+        ) : (
+          <ul className="toc-list">
+            {spreads.map((s, idx) => {
+              const first = s.blocks[0];
+              return (
+                <li key={s.id}>
+                  <button className="toc-item" onClick={() => jumpTo(idx, first?.page ?? 'left')}>
+                    <span className="toc-date">
+                      {s.bookmarked ? '🌹 ' : ''}
+                      {prettyDate(s.date)}
+                    </span>
+                    <span className="toc-preview">{first ? firstLine(first.text) || '…' : '— empty —'}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 
@@ -399,6 +483,7 @@ export function Notebook({
           {bookmark}
         </div>
         {controls}
+        {contents}
         {drawer}
         {printView}
       </div>
@@ -454,7 +539,8 @@ export function Notebook({
       </div>
 
       {controls}
-      {drawer}
+      {contents}
+        {drawer}
       {printView}
     </div>
   );

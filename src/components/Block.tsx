@@ -23,6 +23,7 @@ export function Block({
   onCommitEmpty,
   onMove,
   onDelete,
+  minY = 1,
 }: {
   block: BlockT;
   autoFocus: boolean;
@@ -30,6 +31,7 @@ export function Block({
   onCommitEmpty: () => void;
   onMove: (x: number, y: number) => void;
   onDelete: () => void;
+  minY?: number;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
@@ -60,7 +62,7 @@ export function Block({
     const rect = page.getBoundingClientRect();
     const move = (ev: globalThis.PointerEvent) => {
       const x = clamp(((ev.clientX - rect.left) / rect.width) * 100, 1, 92);
-      const y = clamp(((ev.clientY - rect.top) / rect.height) * 100, 1, 94);
+      const y = clamp(((ev.clientY - rect.top) / rect.height) * 100, minY, 94);
       onMove(x, y);
     };
     const up = () => {
