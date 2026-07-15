@@ -46,8 +46,19 @@ export interface Library {
   volumes: Volume[];
 }
 
+const pad = (n: number) => String(n).padStart(2, '0');
+const isoOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+// Local-date based, so "today" matches the writer's calendar (not UTC).
 export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return isoOf(new Date());
+}
+
+// The next calendar day. Built from local date parts so it ALWAYS advances —
+// no UTC round-trip (which silently repeated the date in eastern timezones).
+export function nextDay(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return isoOf(new Date(y, m - 1, d + 1));
 }
 
 // turn a title into a url slug: "The Wilting Hours!" → "the-wilting-hours"

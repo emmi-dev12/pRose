@@ -1,17 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Volume, WearPreset } from '../types';
-import { newSpread } from '../types';
+import type { Volume } from '../types';
+import { newSpread, nextDay } from '../types';
 import { computeWear } from '../wear';
 import { WearLayer } from './WearLayer';
 import { PoemEditor } from './PoemEditor';
-
-const PRESETS: WearPreset[] = ['brand-new', 'well-loved', 'survived-a-flood'];
-
-function nextDay(iso: string): string {
-  const d = new Date(iso + 'T00:00:00');
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
 
 function prettyDate(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString(undefined, {
@@ -162,34 +154,6 @@ export function Notebook({
           </button>
         )}
         <span className="brand">{volume.title}</span>
-        <label>
-          wear&nbsp;
-          <select
-            value={volume.look.preset}
-            onChange={(e) =>
-              onChange({ ...volume, look: { ...volume.look, preset: e.target.value as WearPreset } })
-            }
-          >
-            {PRESETS.map((p) => (
-              <option key={p} value={p}>
-                {p.replace(/-/g, ' ')}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          intensity&nbsp;
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume.look.intensity}
-            onChange={(e) =>
-              onChange({ ...volume, look: { ...volume.look, intensity: Number(e.target.value) } })
-            }
-          />
-        </label>
         <span className="hint">← → to turn the page</span>
       </div>
     </div>

@@ -105,8 +105,6 @@ body {
   aspect-ratio: 3 / 4;
   border: none;
   border-radius: 3px 7px 7px 3px;
-  overflow: hidden;
-  cursor: pointer;
   color: #f3e7cf;
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"),
@@ -118,6 +116,36 @@ body {
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .shelf-book:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55); }
+/* the open button fills the whole book; delete sits on top */
+.shelf-open {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: inherit;
+  overflow: hidden;
+}
+.shelf-delete {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  z-index: 2;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: #f3e7cf;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+.shelf-book:hover .shelf-delete { opacity: 0.85; }
+.shelf-delete:hover { opacity: 1; background: #7a2a2a; }
 .shelf-cover-inner {
   position: absolute;
   inset: 0.8rem;
@@ -138,6 +166,8 @@ body {
   --c2: #241c14;
   color: #cdbf9d;
   border: 1px dashed #5a4634;
+  cursor: pointer;
+  overflow: hidden;
 }
 .shelf-new:hover { color: #f3e7cf; }
 .shelf-new-inner { position: absolute; inset: 0; display: grid; place-content: center; gap: 0.4rem; text-align: center; }
