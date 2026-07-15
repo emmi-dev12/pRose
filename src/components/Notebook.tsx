@@ -140,6 +140,21 @@ export function Notebook({
   );
   const clearLoose = useCallback(() => onChange({ ...volume, loosePages: [] }), [volume, onChange]);
 
+  // remove the whole day/spread — its writing goes to loose pages first (nothing lost)
+  const deletePage = useCallback(() => {
+    if (spreads.length <= 1) return; // always keep at least one page
+    if (cur.blocks.length && !window.confirm(`Remove ${prettyDate(cur.date)}? Its writing moves to loose pages.`)) return;
+    const moved = cur.blocks
+      .filter((b) => b.text.trim())
+      .map((b) => ({ id: crypto.randomUUID(), text: b.text, discardedAt: new Date().toISOString() }));
+    const nextSpreads = spreads.filter((_, k) => k !== i);
+    onChange({ ...volume, loosePages: [...moved, ...(volume.loosePages ?? [])], spreads: nextSpreads });
+    setFlip(null);
+    setMFlip(null);
+    setMSide('left');
+    setI(Math.min(i, nextSpreads.length - 1));
+  }, [spreads, cur, i, volume, onChange]);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -310,6 +325,14 @@ export function Notebook({
       </button>
       <button className="ctl-btn" onClick={exportPdf} title="Export the whole volume as a PDF">
         ⤓ pdf
+      </button>
+      <button
+        className="ctl-btn danger"
+        onClick={deletePage}
+        disabled={spreads.length <= 1}
+        title="Remove this day (its writing moves to loose pages)"
+      >
+        ✕ page
       </button>
       <span className="hint">{mobile ? 'swipe to turn' : '← → to turn the page'}</span>
     </div>

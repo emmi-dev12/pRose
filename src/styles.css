@@ -602,6 +602,8 @@ body {
   cursor: pointer;
 }
 .ctl-btn:hover { background: #3a2d22; }
+.ctl-btn:disabled { opacity: 0.4; cursor: default; }
+.ctl-btn:disabled:hover { background: transparent; }
 .ctl-btn.danger { border-color: #7a3a34; color: #e0a094; }
 .ctl-btn.danger:hover { background: #4a201c; }
 
