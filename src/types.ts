@@ -26,11 +26,22 @@ export const FONTS: { id: FontChoice; label: string }[] = [
   { id: 'mono', label: 'Typewriter' },
 ];
 
+// A free-placed piece of writing. You click anywhere on a page and start a block;
+// a spread can hold as many as you like, wherever you put them, in any order.
+export interface Block {
+  id: string;
+  page: 'left' | 'right';
+  x: number; // top-left anchor, % of the page's writable width
+  y: number; // top-left anchor, % of the page's writable height
+  text: string; // whitespace preserved exactly
+}
+
 export interface Spread {
   id: string;
   date: string; // ISO yyyy-mm-dd — the day this spread belongs to
-  leftText: string; // whitespace preserved exactly
-  rightText: string;
+  blocks: Block[];
+  leftText?: string; // legacy (pre-blocks) — migrated into blocks on load
+  rightText?: string;
 }
 
 export interface Volume {
@@ -88,9 +99,12 @@ export function newSpread(date: string): Spread {
   return {
     id: crypto.randomUUID(),
     date,
-    leftText: '',
-    rightText: '',
+    blocks: [],
   };
+}
+
+export function newBlock(page: 'left' | 'right', x: number, y: number): Block {
+  return { id: crypto.randomUUID(), page, x, y, text: '' };
 }
 
 export function defaultLook(): VolumeLook {

@@ -3,7 +3,7 @@
 // portable-file backend (USB / air-gapped mode) can slot in later.
 
 import { seal, open, type Sealed } from './crypto';
-import { slugify, type Library, type Volume } from './types';
+import { newBlock, slugify, type Library, type Spread, type Volume } from './types';
 
 const DB_NAME = 'prose';
 const STORE = 'vault';
@@ -43,12 +43,29 @@ function get<T>(key: string): Promise<T | undefined> {
   );
 }
 
-// Backfill fields a legacy volume (pre-shelf) might be missing.
+// Convert a legacy spread (leftText/rightText) into free-placed blocks.
+function normalizeSpread(s: Spread): Spread {
+  if (s.blocks && s.blocks.length >= 0 && !s.leftText && !s.rightText) return { ...s, blocks: s.blocks ?? [] };
+  const blocks = s.blocks ? [...s.blocks] : [];
+  if (s.leftText) blocks.push({ ...newBlock('left', 6, 8), text: s.leftText });
+  if (s.rightText) blocks.push({ ...newBlock('right', 6, 8), text: s.rightText });
+  const { leftText, rightText, ...rest } = s;
+  void leftText;
+  void rightText;
+  return { ...rest, blocks };
+}
+
+// Backfill fields a legacy volume (pre-shelf / pre-blocks) might be missing.
 function normalizeVolume(v: Volume, taken: string[]): Volume {
   let slug = v.slug || slugify(v.title);
   while (taken.includes(slug)) slug = `${slug}-2`;
   taken.push(slug);
-  return { ...v, slug, createdAt: v.createdAt || new Date().toISOString() };
+  return {
+    ...v,
+    slug,
+    createdAt: v.createdAt || new Date().toISOString(),
+    spreads: v.spreads.map(normalizeSpread),
+  };
 }
 
 export interface Storage {
