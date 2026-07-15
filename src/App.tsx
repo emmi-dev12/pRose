@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { indexedDbStorage as store } from './storage';
-import { newVolume, type Volume } from './types';
+import { newVolume, type Volume, type VolumeLook } from './types';
 import { Notebook } from './components/Notebook';
+import { VolumeSetup } from './components/VolumeSetup';
 
-type Phase = 'checking' | 'locked' | 'ready';
+type Phase = 'checking' | 'locked' | 'create' | 'ready';
 
 export function App() {
   const [phase, setPhase] = useState<Phase>('checking');
@@ -23,21 +24,29 @@ export function App() {
   const unlock = useCallback(async () => {
     setError('');
     try {
-      let v: Volume;
       if (hasNotebook) {
-        v = await store.load(pass); // throws on wrong passphrase
+        const v = await store.load(pass); // throws on wrong passphrase
+        passRef.current = pass;
+        setVolume(v);
+        setPhase('ready');
       } else {
-        v = newVolume();
-        await store.save(pass, v);
+        // new writer: hold the passphrase and go dress the first volume
+        passRef.current = pass;
+        setPhase('create');
       }
-      passRef.current = pass;
-      setVolume(v);
-      setPhase('ready');
       setPass('');
     } catch {
       setError('That passphrase doesn’t open this notebook.');
     }
   }, [hasNotebook, pass]);
+
+  // may throw if storage is unavailable (quota, private-mode); VolumeSetup surfaces it
+  const createVolume = useCallback(async (title: string, look: VolumeLook) => {
+    const v = newVolume(title, look);
+    await store.save(passRef.current, v); // must succeed before we leave setup
+    setVolume(v);
+    setPhase('ready');
+  }, []);
 
   // autosave (encrypted) shortly after any change
   const saveTimer = useRef<number>();
@@ -83,6 +92,10 @@ export function App() {
         </div>
       </div>
     );
+  }
+
+  if (phase === 'create') {
+    return <VolumeSetup onComplete={createVolume} />;
   }
 
   return volume ? <Notebook volume={volume} onChange={onChange} /> : null;
