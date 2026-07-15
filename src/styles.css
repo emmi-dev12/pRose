@@ -57,6 +57,105 @@ body {
 }
 .lock-card button:disabled { opacity: 0.5; cursor: default; }
 .lock-error { margin-top: 0.8rem; color: #8a3b2f; font-size: 0.88rem; }
+.stay {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  justify-content: center;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #6a6050;
+  cursor: pointer;
+}
+
+/* ---------- the shelf (landing) ---------- */
+.shelf {
+  min-height: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+  color: #e8dcc0;
+}
+.shelf-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.shelf-head h1 { margin: 0; font-weight: 500; letter-spacing: 0.03em; }
+.shelf-sub { margin: 0.2rem 0 2rem; opacity: 0.6; }
+.lock-btn {
+  background: transparent;
+  border: 1px solid #5a4634;
+  color: #d8cba7;
+  border-radius: 4px;
+  padding: 0.35rem 0.8rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.lock-btn:hover { background: #3a2d22; }
+
+.shelf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1.6rem;
+}
+.shelf-book {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border: none;
+  border-radius: 3px 7px 7px 3px;
+  overflow: hidden;
+  cursor: pointer;
+  color: #f3e7cf;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"),
+    linear-gradient(135deg, var(--c1), var(--c2));
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.5),
+    inset 6px 0 12px -6px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.shelf-book:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55); }
+.shelf-cover-inner {
+  position: absolute;
+  inset: 0.8rem;
+  border: 1px solid rgba(243, 231, 207, 0.26);
+  border-radius: 3px;
+  display: grid;
+  place-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 0.6rem;
+}
+.shelf-rose { font-size: 1.7rem; }
+.shelf-title { font-size: 1.05rem; line-height: 1.25; word-break: break-word; }
+.shelf-slug { font-size: 0.7rem; opacity: 0.55; font-family: ui-monospace, Menlo, monospace; }
+
+.shelf-new {
+  --c1: #33291f;
+  --c2: #241c14;
+  color: #cdbf9d;
+  border: 1px dashed #5a4634;
+}
+.shelf-new:hover { color: #f3e7cf; }
+.shelf-new-inner { position: absolute; inset: 0; display: grid; place-content: center; gap: 0.4rem; text-align: center; }
+.shelf-plus { font-size: 2rem; line-height: 1; }
+
+.setup-back,
+.shelf-link {
+  background: transparent;
+  border: none;
+  color: #cdbf9d;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+.setup-back { margin-bottom: 0.6rem; font-size: 0.9rem; opacity: 0.8; }
+.setup-back:hover { opacity: 1; }
+.shelf-link { font-size: 0.95rem; }
+.shelf-link:hover { color: #f5edd6; }
 
 /* ---------- stage & book ---------- */
 .stage {

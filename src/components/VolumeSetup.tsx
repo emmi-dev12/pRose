@@ -22,8 +22,10 @@ const PRESETS: { id: WearPreset; label: string }[] = [
 // A live cover preview reacts to every choice, so the object feels chosen, not defaulted.
 export function VolumeSetup({
   onComplete,
+  onCancel,
 }: {
   onComplete: (title: string, look: VolumeLook) => Promise<void>;
+  onCancel?: () => void;
 }) {
   const [title, setTitle] = useState('Volume I');
   const [look, setLook] = useState<VolumeLook>(defaultLook());
@@ -62,6 +64,11 @@ export function VolumeSetup({
           if (!saving) begin();
         }}
       >
+        {onCancel && (
+          <button type="button" className="setup-back" onClick={onCancel}>
+            ← back to the shelf
+          </button>
+        )}
         <h1>Begin a volume</h1>
         <p className="setup-sub">Dress the notebook you're about to fill. You can change your mind later.</p>
 

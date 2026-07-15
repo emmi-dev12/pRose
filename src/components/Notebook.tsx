@@ -27,9 +27,11 @@ type Flip = { dir: 'next' | 'prev'; run: boolean } | null;
 export function Notebook({
   volume,
   onChange,
+  onBack,
 }: {
   volume: Volume;
   onChange: (v: Volume) => void;
+  onBack?: () => void;
 }) {
   const [i, setI] = useState(volume.spreads.length - 1); // open to the newest day
   const [flip, setFlip] = useState<Flip>(null);
@@ -154,7 +156,12 @@ export function Notebook({
       </div>
 
       <div className="controls">
-        <span className="brand">🥀 pRose</span>
+        {onBack && (
+          <button className="shelf-link" onClick={onBack} title="Back to the shelf">
+            🥀 shelf
+          </button>
+        )}
+        <span className="brand">{volume.title}</span>
         <label>
           wear&nbsp;
           <select
