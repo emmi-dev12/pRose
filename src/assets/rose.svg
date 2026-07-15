@@ -1,0 +1,47 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="pRose — a weathered rose">
+  <title>pRose</title>
+  <defs>
+    <!-- petals: deep rose fading to a browned, dried edge -->
+    <radialGradient id="bloom" cx="50%" cy="42%" r="62%">
+      <stop offset="0%" stop-color="#9c3b52"/>
+      <stop offset="55%" stop-color="#7e2e44"/>
+      <stop offset="82%" stop-color="#6b3a34"/>
+      <stop offset="100%" stop-color="#5a4a2f"/>
+    </radialGradient>
+    <linearGradient id="stem" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5e6b3a"/>
+      <stop offset="100%" stop-color="#3f4a27"/>
+    </linearGradient>
+    <!-- age wash: subtle brown foxing over everything -->
+    <radialGradient id="foxing" cx="38%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#3a2a12" stop-opacity="0.28"/>
+    </radialGradient>
+  </defs>
+
+  <!-- drooping stem -->
+  <path d="M64 60 C63 78 70 92 60 112" stroke="url(#stem)" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+  <!-- a wilted leaf, edge browned -->
+  <path d="M63 84 C48 80 40 86 38 98 C52 100 62 96 63 84 Z" fill="#4a5a2c"/>
+  <path d="M63 84 C48 80 40 86 38 98" stroke="#6b5a2f" stroke-width="1.4" fill="none" opacity="0.7"/>
+
+  <!-- the bloom: layered petals -->
+  <g>
+    <!-- outer petals, slightly drooping and browned at tips -->
+    <path d="M64 22 C44 20 30 34 32 54 C34 72 50 82 64 80 C78 82 94 72 96 54 C98 34 84 20 64 22 Z" fill="url(#bloom)"/>
+    <!-- petal separations -->
+    <path d="M64 24 C58 40 58 62 64 80" stroke="#5a2637" stroke-width="1.2" opacity="0.5" fill="none"/>
+    <path d="M40 40 C54 50 60 66 64 80" stroke="#5a2637" stroke-width="1" opacity="0.4" fill="none"/>
+    <path d="M88 40 C74 50 68 66 64 80" stroke="#5a2637" stroke-width="1" opacity="0.4" fill="none"/>
+    <!-- inner furl -->
+    <path d="M64 36 C52 40 50 56 60 64 C70 70 82 60 80 48 C78 38 70 34 64 36 Z" fill="#8a3149"/>
+    <path d="M64 44 C57 47 57 56 64 60 C72 62 74 52 70 47 C68 44 66 43 64 44 Z" fill="#6f2740"/>
+    <!-- browned, curling tips -->
+    <path d="M32 52 C28 56 30 62 36 62 C34 57 33 54 32 52 Z" fill="#6b4a24" opacity="0.85"/>
+    <path d="M96 52 C100 56 98 62 92 62 C94 57 95 54 96 52 Z" fill="#6b4a24" opacity="0.85"/>
+    <path d="M64 78 C60 84 68 84 64 78 Z" fill="#5a4426"/>
+  </g>
+
+  <!-- age wash on top -->
+  <rect x="0" y="0" width="128" height="128" fill="url(#foxing)"/>
+</svg>

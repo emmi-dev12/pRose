@@ -1,9 +1,10 @@
-import { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { type MouseEvent, type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Spread, Volume } from '../types';
 import { newBlock, newSpread, nextDay } from '../types';
 import { computeWear, effectiveAmount } from '../wear';
 import { WearLayer } from './WearLayer';
 import { Block } from './Block';
+import roseUrl from '../assets/rose.svg'; // bundled/inlined so it works as a single file
 
 function prettyDate(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString(undefined, {
@@ -99,6 +100,11 @@ export function Notebook({
       if (dir === 'next' && i === spreads.length - 1) {
         onChange({ ...volume, spreads: [...spreads, newSpread(nextDay(cur.date))] }); // fresh day
       }
+      // on phones the pages are stacked — skip the 3D flip and just switch spreads
+      if (window.matchMedia('(max-width: 700px)').matches) {
+        setI((n) => n + (dir === 'next' ? 1 : -1));
+        return;
+      }
       setFlip({ dir, run: false });
     },
     [flip, i, spreads, cur, volume, onChange],
@@ -142,14 +148,30 @@ export function Notebook({
 
   const emptyHint = (spread: Spread, side: 'left' | 'right') =>
     !flip && spread.blocks.filter((b) => b.page === side).length === 0 ? (
-      <div className="page-hint">click anywhere to write</div>
+      <div className="page-hint">tap anywhere to write</div>
     ) : null;
+
+  // swipe sideways to turn the page (touch) — but not when swiping starts on text
+  const touch = useRef({ x: 0, y: 0, on: false });
+  const onTouchStart = (e: TouchEvent) => {
+    if ((e.target as HTMLElement).tagName === 'TEXTAREA') return;
+    touch.current = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY, on: true };
+  };
+  const onTouchEnd = (e: TouchEvent) => {
+    if (!touch.current.on) return;
+    touch.current.on = false;
+    const dx = e.changedTouches[0].clientX - touch.current.x;
+    const dy = e.changedTouches[0].clientY - touch.current.y;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) turn(dx < 0 ? 'next' : 'prev');
+  };
 
   return (
     <div className="stage">
       <div
         className={`book font-${volume.look.font} ${volume.look.lined ? 'lined' : ''}`}
         style={{ perspective: 2200 }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
       >
         {/* left page */}
         <div className="page left" onMouseDown={(e) => addBlock('left', e)}>
@@ -186,7 +208,7 @@ export function Notebook({
         {cur.bookmarked && !flip && (
           <img
             className="bookmark"
-            src="./rose.svg"
+            src={roseUrl}
             alt="bookmark"
             title="Remove bookmark"
             onMouseDown={(e) => e.stopPropagation()}
