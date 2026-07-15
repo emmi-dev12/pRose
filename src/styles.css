@@ -290,11 +290,39 @@ body {
   font: inherit;
   font-size: 18px;
   line-height: 30px;
-  white-space: pre; /* indentation & line breaks preserved exactly */
+  /* preserve indentation & line breaks, but wrap long lines instead of overflowing */
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
   overflow: hidden;
   min-width: 1ch;
   tab-size: 4;
 }
+/* right-edge resize handle (appears on hover/focus) */
+.block-size {
+  position: absolute;
+  right: -6px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: ew-resize;
+  opacity: 0;
+  touch-action: none;
+  z-index: 3;
+}
+.block-size::before {
+  content: '';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 28px;
+  border-radius: 2px;
+  background: #9a8a6c;
+}
+.block-wrap:hover .block-size,
+.block-wrap:focus-within .block-size { opacity: 0.55; }
+.block-size:hover { opacity: 0.9 !important; }
 /* drag grip + delete appear on hover / focus-within */
 .block-grip,
 .block-del {
@@ -335,6 +363,8 @@ body {
 .block.static {
   position: absolute;
   pointer-events: none;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
 .font-hand .block { font-size: 20px; }
 
@@ -602,6 +632,8 @@ body {
   cursor: pointer;
 }
 .ctl-btn:hover { background: #3a2d22; }
+.ctl-btn:disabled { opacity: 0.4; cursor: default; }
+.ctl-btn:disabled:hover { background: transparent; }
 .ctl-btn.danger { border-color: #7a3a34; color: #e0a094; }
 .ctl-btn.danger:hover { background: #4a201c; }
 
@@ -701,7 +733,9 @@ body {
   }
   .print-block {
     position: absolute;
-    white-space: pre;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    max-width: 90%;
     font-family: 'Iowan Old Style', Palatino, Georgia, serif;
     font-size: 12pt;
     line-height: 1.5;

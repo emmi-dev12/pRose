@@ -27,7 +27,11 @@ function StaticBlocks({ spread, side }: { spread: Spread; side: 'left' | 'right'
       {spread.blocks
         .filter((b) => b.page === side)
         .map((b) => (
-          <div key={b.id} className="block static" style={{ left: `${b.x}%`, top: `${b.y}%` }}>
+          <div
+            key={b.id}
+            className="block static"
+            style={{ left: `${b.x}%`, top: `${b.y}%`, width: b.w != null ? `${b.w}%` : undefined }}
+          >
             {b.text}
           </div>
         ))}
@@ -107,6 +111,11 @@ export function Notebook({
       setSpread({ ...cur, blocks: cur.blocks.map((b) => (b.id === id ? { ...b, x, y } : b)) }),
     [cur, setSpread],
   );
+  const resizeBlock = useCallback(
+    (id: string, w: number) =>
+      setSpread({ ...cur, blocks: cur.blocks.map((b) => (b.id === id ? { ...b, w } : b)) }),
+    [cur, setSpread],
+  );
 
   // deliberate delete → the block rests in the volume's loose-pages drawer
   const deleteBlock = useCallback(
@@ -139,6 +148,21 @@ export function Notebook({
     [volume, onChange],
   );
   const clearLoose = useCallback(() => onChange({ ...volume, loosePages: [] }), [volume, onChange]);
+
+  // remove the whole day/spread — its writing goes to loose pages first (nothing lost)
+  const deletePage = useCallback(() => {
+    if (spreads.length <= 1) return; // always keep at least one page
+    if (cur.blocks.length && !window.confirm(`Remove ${prettyDate(cur.date)}? Its writing moves to loose pages.`)) return;
+    const moved = cur.blocks
+      .filter((b) => b.text.trim())
+      .map((b) => ({ id: crypto.randomUUID(), text: b.text, discardedAt: new Date().toISOString() }));
+    const nextSpreads = spreads.filter((_, k) => k !== i);
+    onChange({ ...volume, loosePages: [...moved, ...(volume.loosePages ?? [])], spreads: nextSpreads });
+    setFlip(null);
+    setMFlip(null);
+    setMSide('left');
+    setI(Math.min(i, nextSpreads.length - 1));
+  }, [spreads, cur, i, volume, onChange]);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
@@ -272,6 +296,7 @@ export function Notebook({
           onChange={(t) => editBlock(b.id, t)}
           onCommitEmpty={() => removeBlock(b.id)}
           onMove={(x, y) => moveBlock(b.id, x, y)}
+          onResize={(w) => resizeBlock(b.id, w)}
           onDelete={() => deleteBlock(b.id)}
           minY={PROTECT_Y}
         />
@@ -310,6 +335,14 @@ export function Notebook({
       </button>
       <button className="ctl-btn" onClick={exportPdf} title="Export the whole volume as a PDF">
         ⤓ pdf
+      </button>
+      <button
+        className="ctl-btn danger"
+        onClick={deletePage}
+        disabled={spreads.length <= 1}
+        title="Remove this day (its writing moves to loose pages)"
+      >
+        ✕ page
       </button>
       <span className="hint">{mobile ? 'swipe to turn' : '← → to turn the page'}</span>
     </div>
@@ -422,7 +455,7 @@ export function Notebook({
                 {s.blocks
                   .filter((b) => b.page === side)
                   .map((b) => (
-                    <div key={b.id} className="print-block" style={{ left: `${b.x}%`, top: `${b.y}%` }}>
+                    <div key={b.id} className="print-block" style={{ left: `${b.x}%`, top: `${b.y}%`, width: b.w != null ? `${b.w}%` : undefined }}>
                       {b.text}
                     </div>
                   ))}
