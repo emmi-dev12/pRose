@@ -33,7 +33,10 @@ export interface WearMarks {
 // and the more you write, the older it gets. Deterministic from content, 0..1.
 export function livingAge(volume: Volume): number {
   const days = volume.spreads.length - 1;
-  const chars = volume.spreads.reduce((n, s) => n + s.leftText.length + s.rightText.length, 0);
+  const chars = volume.spreads.reduce(
+    (n, s) => n + s.blocks.reduce((m, b) => m + b.text.length, 0),
+    0,
+  );
   return Math.min(1, days / 45 + chars / 9000);
 }
 
